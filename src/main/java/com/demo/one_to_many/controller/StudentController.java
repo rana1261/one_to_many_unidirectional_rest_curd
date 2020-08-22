@@ -7,6 +7,7 @@ import java.util.Set;
 import javax.validation.Valid;
 
 import com.demo.one_to_many.model.Laptop;
+import com.demo.one_to_many.repository.LaptopRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,6 +26,8 @@ import com.demo.one_to_many.repository.StudentRepository;
 public class StudentController {
     @Autowired
     StudentRepository studentRepository;
+    @Autowired
+    LaptopRepository laptopRepository;
 
     /* post a Student and also post more than one child (Laptop) in third braket -->
      "laptop":[{"laptopName":"Samsung Pro-50"},
@@ -82,7 +85,59 @@ public class StudentController {
 
 
 
+
+
+
     /*update student by id and not update it's child (Laptop)*/
+    @PutMapping("/students/{id}")
+    public Student justUpdateStudent(@PathVariable Long id,
+                                 @Valid @RequestBody Student studentUpdated) {
+        return studentRepository.findById(id)
+                .map(student -> {
+                    student.setStudentName(studentUpdated.getStudentName());
+                    student.setStudentMark(studentUpdated.getStudentMark());
+                    return studentRepository.save(student);
+                }).orElseThrow(() -> new NotFoundException("Student not found with id " + id));
+    }
+
+
+
+    /*   student id er under e laptop gulor akta laptop id dhore update korbe.
+        akane kono student table er data update kora jabe na*/
+    @PutMapping("students/{studentId}/laptops/{laptopId}")
+    public Laptop updateLaptop(@PathVariable Long studentId, @PathVariable Long laptopId,
+                               @Valid @RequestBody Laptop laptopUpdated) {
+
+        if (!studentRepository.existsById(studentId)) {
+            throw new NotFoundException("Student not found!");
+        }
+
+        return laptopRepository.findById(laptopId)
+                .map(laptop -> {
+                    laptop.setLaptopName(laptopUpdated.getLaptopName());
+                    return laptopRepository.save(laptop);
+                }).orElseThrow(() -> new NotFoundException("Laptop not found!"));
+    }
+
+
+    /*update student by id and not update it's child (Laptop). Here,each laptop have to laptop id .
+    input json will be like--->
+        {
+        "studentName": "Md. Sohel Rana",
+        "studentMark": 4440,
+        "laptop": [
+            {"lid": 6,
+             "laptopName": "Dell Pro-50"
+            },
+            {"lid": 4,
+             "laptopName": "Mackbook Pro-50"
+            },
+            {"lid": 5,
+             "laptopName": "vivo Pro-50"
+            }
+        ]
+    }
+    */
     @PutMapping("/students/{id}")
     public Student updateStudent(@PathVariable Long id,
                                  @Valid @RequestBody Student studentUpdated) {
@@ -90,22 +145,21 @@ public class StudentController {
                 .map(student -> {
                     student.setStudentName(studentUpdated.getStudentName());
                     student.setStudentMark(studentUpdated.getStudentMark());
-                    //Laptop laptop = student.getLaptop();
-                    //laptop.setLaptopName(studentUpdated.getLaptop().getLaptopName());
-                    Set<Laptop> laptop = student.getLaptop();
-                    laptop=studentUpdated.getLaptop();
-                    student.setLaptop(laptop);
+                    Set<Laptop> laptops = student.getLaptop();
+                    if (studentUpdated.getLaptop() != null) {
+                        for (Laptop lp : laptops) {
+                            for (Laptop ulp : studentUpdated.getLaptop()) {
+                                if (lp.getLid() == ulp.getLid()) {
+                                    lp.setLaptopName(ulp.getLaptopName());
+                                }
+                            }
+                        }
+                        student.setLaptop(laptops);
+                    }
                     return studentRepository.save(student);
                 }).orElseThrow(() -> new NotFoundException("Student not found with id " + id));
     }
-    /*	@PutMapping(value="students/update")
-	public void updateStudent(@RequestBody Student student) {
-		Student su=studentRepository.getOne(student.getSRoll());
-		su.setSName(student.getSName());
-		su.setSMark(student.getSMark());
-		su.setLaptop(student.getLaptop());
-		studentRepository.save(su);
-	}*/
+
 
 
 }
