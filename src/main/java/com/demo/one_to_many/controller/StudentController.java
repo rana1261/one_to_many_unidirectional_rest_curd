@@ -117,6 +117,7 @@ public class StudentController {
                     laptop.setLaptopName(laptopUpdated.getLaptopName());
                     return laptopRepository.save(laptop);
                 }).orElseThrow(() -> new NotFoundException("Laptop not found!"));
+
     }
 
 
@@ -138,7 +139,7 @@ public class StudentController {
         ]
     }
     */
-    @PutMapping("/students/{id}")
+    @PutMapping("/students/{id}/laptops")
     public Student updateStudent(@PathVariable Long id,
                                  @Valid @RequestBody Student studentUpdated) {
         return studentRepository.findById(id)

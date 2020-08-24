@@ -12,5 +12,4 @@ import java.util.Set;
 @Repository
 public interface StudentRepository extends JpaRepository<Student, Long> {
 
-
 }
