@@ -102,22 +102,23 @@ public class StudentController {
 
 
 
-    /*   student id er under e laptop gulor akta laptop id dhore update korbe.
-        akane kono student table er data update kora jabe na*/
+
+/*    student id er under e laptop gulor akta laptop id dhore update korbe.
+    akane kono student table er data update kora jabe na*/
     @PutMapping("students/{studentId}/laptops/{laptopId}")
-    public Laptop updateLaptop(@PathVariable Long studentId, @PathVariable Long laptopId,
-                               @Valid @RequestBody Laptop laptopUpdated) {
+    public void laptopUpdate(@PathVariable Long studentId, @PathVariable Long laptopId,
+                             @Valid @RequestBody Laptop laptopUpdated){
 
-        if (!studentRepository.existsById(studentId)) {
-            throw new NotFoundException("Student not found!");
+        Student student=studentRepository.findById(studentId).get();
+        Set<Laptop> laptop=student.getLaptop();
+
+        for (Laptop lp:laptop){
+            if(lp.getLid()==laptopId){
+                lp.setLaptopName(laptopUpdated.getLaptopName());
+            }
         }
-
-        return laptopRepository.findById(laptopId)
-                .map(laptop -> {
-                    laptop.setLaptopName(laptopUpdated.getLaptopName());
-                    return laptopRepository.save(laptop);
-                }).orElseThrow(() -> new NotFoundException("Laptop not found!"));
-
+        student.setLaptop(laptop);
+        studentRepository.save(student);
     }
 
 
